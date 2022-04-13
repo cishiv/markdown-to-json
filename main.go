@@ -33,6 +33,9 @@ func RecursiveDirectoryCrawl(dirName string) {
 	}
 }
 
+// TODO - Notion integration
+// Categorisation
+// How do databases work?
 func handleNotion(path string, data string) {
 	// fmt.Println("going to publish to notion")
 	// categorise
