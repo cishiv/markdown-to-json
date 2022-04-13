@@ -26,16 +26,19 @@ func RecursiveDirectoryCrawl(dirName string) {
 			if len(s) > 1 && s[1] == "md" {
 				dat, err := os.ReadFile(dirName + "/" + f.Name())
 				handleError(err)
-				handleNotion(string(dat))
+				handleNotion(dirName+"/"+f.Name(), string(dat))
 			}
 
 		}
 	}
 }
 
-func handleNotion(data string) {
-	fmt.Println("going to publish to notion")
-	fmt.Println(data)
+func handleNotion(path string, data string) {
+	// fmt.Println("going to publish to notion")
+	// categorise
+	s := strings.ReplaceAll(path, "./2021-obsidian/2021/", "")
+	fmt.Println(s)
+	// fmt.Println(data)
 }
 
 func handleError(e error) {
