@@ -86,6 +86,7 @@ func apply(patterns map[string]regexp.Regexp, line string) {
 	for name, pattern := range patterns {
 		matches := pattern.MatchString(line)
 		indices := pattern.FindAllIndex([]byte(line), -1)
+		// probably need some precedence rules & newline/paragaph logic
 		if matches && indices != nil {
 			fmt.Println(name, matches, indices)
 		}
