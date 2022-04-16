@@ -32,5 +32,5 @@ func TestFileToSlice(t *testing.T) {
 }
 
 func TestPatterns(t *testing.T) {
-	patterns()
+	compilePatterns()
 }

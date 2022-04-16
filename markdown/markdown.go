@@ -3,6 +3,7 @@ package markdown
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -20,22 +21,23 @@ type Block struct {
 	url      string
 }
 
+// paragraph is fallback
 var blockpatterns = map[string]string{
 	// These matchers _should_ work because we're matching blocks line-by-line
 	"heading1":   "^#",
 	"heading2":   "^##",
 	"heading3":   "^###",
-	"paragraph":  "DMAE", // doesnt match anything else
 	"linebreak":  "\n",
-	"blockquote": "^>",       // support only single level blocks (blocks can contain other elements)
-	"codeblock":  "^```",     // this one needs depth
-	"ul":         `\-|\*|\+`, // this one is debatable
+	"blockquote": "^>",       // support only single level blocks (blocks can contain other elements).
+	"codeblock":  "^```",     // this one needs depth.
+	"ul":         `\-|\*|\+`, // this one is debatable.
 	"ol":         `^[0-9]*\.`,
 	"hr":         "^---",
 }
 
+// excludes images.
 var spanpatterns = map[string]string{
-	// for em and strong, we need to count, but regex works
+	// for em and strong, we need to count, but regex works.
 	"em":         "_.*_",
 	"link":       `\[.*\]\(.*\)`,
 	"strong":     `\*.*\*`,
@@ -43,6 +45,7 @@ var spanpatterns = map[string]string{
 	"img":        "TODO", // TODO
 }
 
+// do not use - just for context / remembering that these might be useful things.
 var miscpatterns = map[string]string{
 	"escape":   "TODO", // TODO
 	"autolink": "TODO", // TODO
@@ -76,28 +79,26 @@ func parse(fileSlice []string) string {
 	return ""
 }
 
-func patterns() {
-	fmt.Println("block patterns")
+func compilePatterns() map[string]regexp.Regexp {
+	fmt.Println("compile block patterns")
+	patterns := make(map[string]regexp.Regexp)
 	for name, pattern := range blockpatterns {
-		if pattern == "DMAE" || pattern == "TODO" {
-			continue
+		compiled, err := regexp.Compile(pattern)
+		if err != nil {
+			panic(err)
 		}
-		fmt.Println("Name:", name, "=>", "Pattern:", pattern)
+		patterns[pattern] = *compiled.Copy()
+		fmt.Println("Complied Name:", name, "=>", "Pattern:", pattern)
 	}
 
-	fmt.Println("span patterns")
+	fmt.Println("compile span patterns")
 	for name, pattern := range spanpatterns {
-		if pattern == "DMAE" || pattern == "TODO" {
-			continue
+		compiled, err := regexp.Compile(pattern)
+		if err != nil {
+			panic(err)
 		}
-		fmt.Println("Name:", name, "=>", "Pattern:", pattern)
+		patterns[pattern] = *compiled.Copy()
+		fmt.Println("Compiled Name:", name, "=>", "Pattern:", pattern)
 	}
-
-	fmt.Println("misc patterns")
-	for name, pattern := range miscpatterns {
-		if pattern == "DMAE" || pattern == "TODO" {
-			continue
-		}
-		fmt.Println("Name:", name, "=>", "Pattern:", pattern)
-	}
+	return patterns
 }
