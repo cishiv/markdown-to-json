@@ -1,6 +1,9 @@
 package markdown
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 var unparsedMarkdown string = `
 # This is a heading
@@ -14,15 +17,20 @@ _italics_
 [Link](https://link.com)
 `
 
-func TestMarkdownToProps(t *testing.T) {
-	got := MarkdownToProps(unparsedMarkdown)
-	want := `{
-		"heading1": "",
-		"heading2": "",
-		"list": ["", ""],
-		"paragraph": "",
-		}`
+func TestFileToSlice(t *testing.T) {
+	dat, err := os.ReadFile("./test.md")
+	if err != nil {
+		panic(err)
+	}
+	result := fileToSlice(string(dat))
+	got := len(result)
+	parse(result)
+	want := 310
 	if got != want {
 		t.Errorf("got %q, wanted %q", got, want)
 	}
+}
+
+func TestPatterns(t *testing.T) {
+	patterns()
 }

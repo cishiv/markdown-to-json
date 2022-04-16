@@ -1,0 +1,47 @@
+  {
+    "name": "body",
+    "content": "",
+    "children": {
+      "name": "#",
+        "content": "Heading 1",
+        "children": {
+          "##": {
+            "content": "Heading 2",
+            "appends": false,
+            "children": {}
+          },
+          "p": {
+            "content": "this is a paragraph with a",
+            "children": {
+              "link": {
+                "content": "test",
+                "url": "https://test.com",
+                "appends": "true",
+                "children": {}
+              },
+              "paragraph": {
+                "content": "The paragraph continues with a list.",
+                "em": [
+                  4,
+                  5
+                ],
+                "strong": [
+                  5,
+                  6
+                ],
+                "appends": true,
+                "children": {}
+              },
+              "list": {
+                "content": [
+                  "item1",
+                  "item2"
+                ],
+                "appends": false,
+                "children": {}
+              }
+            }
+          }
+        }
+    }
+  }
