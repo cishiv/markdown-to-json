@@ -79,6 +79,10 @@ func parse(fileSlice []string) string {
 	return ""
 }
 
+func apply(pattern regexp.Regexp, line string) {
+	fmt.Println(pattern.MatchString(line))
+}
+
 func compilePatterns() map[string]regexp.Regexp {
 	fmt.Println("compile block patterns")
 	patterns := make(map[string]regexp.Regexp)
