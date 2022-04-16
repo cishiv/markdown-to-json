@@ -28,14 +28,13 @@ func RecursiveDirectoryCrawl(dirName string) {
 				handleError(err)
 				handleNotion(dirName+"/"+f.Name(), string(dat))
 			}
-
 		}
 	}
 }
 
 // TODO - Notion integration
 // Categorisation
-// How do databases work?
+// How do databases
 func handleNotion(path string, data string) {
 	// fmt.Println("going to publish to notion")
 	// categorise
@@ -49,3 +48,5 @@ func handleError(e error) {
 		panic(e)
 	}
 }
+
+// (ok, err)
