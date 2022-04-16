@@ -40,8 +40,6 @@ func TestPatterns(t *testing.T) {
 	patterns := compilePatterns()
 	// o(n^2) nice :)
 	for _, line := range result {
-		for _, pattern := range patterns {
-			apply(pattern, line)
-		}
+		apply(patterns, line)
 	}
 }

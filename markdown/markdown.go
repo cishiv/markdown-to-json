@@ -24,9 +24,9 @@ type Block struct {
 // paragraph is fallback
 var blockpatterns = map[string]string{
 	// These matchers _should_ work because we're matching blocks line-by-line
-	"heading1":   "^#",
-	"heading2":   "^##",
-	"heading3":   "^###",
+	"heading1":   "^#{1}",
+	"heading2":   "^#{2}",
+	"heading3":   "^#{3}",
 	"linebreak":  "\n",
 	"blockquote": "^>",       // support only single level blocks (blocks can contain other elements).
 	"codeblock":  "^```",     // this one needs depth.
@@ -79,8 +79,15 @@ func parse(fileSlice []string) string {
 	return ""
 }
 
-func apply(pattern regexp.Regexp, line string) {
-	fmt.Println(pattern.MatchString(line))
+func apply(patterns map[string]regexp.Regexp, line string) {
+	fmt.Println(line)
+	for name, pattern := range patterns {
+		matches := pattern.MatchString(line)
+		indices := pattern.FindAllIndex([]byte(line), -1)
+		if matches && indices != nil {
+			fmt.Println(name, matches, indices)
+		}
+	}
 }
 
 func compilePatterns() map[string]regexp.Regexp {
@@ -91,7 +98,7 @@ func compilePatterns() map[string]regexp.Regexp {
 		if err != nil {
 			panic(err)
 		}
-		patterns[pattern] = *compiled.Copy()
+		patterns[name] = *compiled.Copy()
 		fmt.Println("Complied Name:", name, "=>", "Pattern:", pattern)
 	}
 
@@ -101,7 +108,7 @@ func compilePatterns() map[string]regexp.Regexp {
 		if err != nil {
 			panic(err)
 		}
-		patterns[pattern] = *compiled.Copy()
+		patterns[name] = *compiled.Copy()
 		fmt.Println("Compiled Name:", name, "=>", "Pattern:", pattern)
 	}
 	return patterns
