@@ -20,7 +20,7 @@ func RecursiveDirectoryCrawl(dirName string) {
 		handleError(err)
 		switch mode := fileOrDir.Mode(); {
 		case mode.IsDir():
-			RecursiveDirectoryCrawl(dirName + "/" + f.Name())
+			RecursiveDirectoryCrawl(dirName + "/" + f.Name())	
 		case mode.IsRegular():
 			s := strings.Split(f.Name(), ".")
 			if len(s) > 1 && s[1] == "md" {
