@@ -21,6 +21,12 @@ type Block struct {
 	url      string
 }
 
+type Match struct {
+	name    string
+	line    string
+	indices [][]int
+}
+
 // paragraph is fallback
 var blockpatterns = map[string]string{
 	// These matchers _should_ work because we're matching blocks line-by-line
@@ -81,16 +87,21 @@ func parse(fileSlice []string) string {
 	return ""
 }
 
-func apply(patterns map[string]regexp.Regexp, line string) {
+func apply(patterns map[string]regexp.Regexp, line string) []Match {
 	fmt.Println(line)
+	var matches []Match
 	for name, pattern := range patterns {
-		matches := pattern.MatchString(line)
+		matched := pattern.MatchString(line)
 		indices := pattern.FindAllIndex([]byte(line), -1)
-		// probably need some precedence rules & newline/paragaph logic
-		if matches && indices != nil {
-			fmt.Println(name, matches, indices)
+		if matched {
+			matches = append(matches, Match{
+				name:    name,
+				line:    line,
+				indices: indices,
+			})
 		}
 	}
+	return matches
 }
 
 func compilePatterns() map[string]regexp.Regexp {
