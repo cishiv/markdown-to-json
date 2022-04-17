@@ -4,12 +4,12 @@ package utils
 Map: Define a generic map function that accepts a slice<T> and a function(T): V,
 that applies f(T):V to each element of slice<T> such that slice<T> is transformed to slice<V>
 **/
-func Map[T any, V any](vs []T, f func(T) V) []V {
-	transform := make([]V, len(vs))
-	for i, v := range vs {
-		transform[i] = f(v)
+func Map[T any, R any](operand []T, f func(T) R) []R {
+	result := make([]R, len(operand))
+	for i, r := range operand {
+		result[i] = f(r)
 	}
-	return transform
+	return result
 }
 
 /**

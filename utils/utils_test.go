@@ -41,6 +41,6 @@ func TestMap(t *testing.T) {
 	// a linear 1:1 transform should happen
 	actualTransform := (mapped[0].third == initial[0].first && mapped[0].fourth == initial[0].second) && (mapped[1].third == initial[1].first && mapped[1].fourth == initial[1].second)
 	if !actualTransform {
-		t.Errorf("transform was not liner")
+		t.Errorf("transform was not linear")
 	}
 }
