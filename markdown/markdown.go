@@ -20,9 +20,9 @@ type Match struct {
 }
 
 type LinkedLine struct {
-	lineType      string
-	resultStrings []string
-	safe          bool
+	LineType      string   `json:"lineType"`
+	ResultStrings []string `json:"resultStrings"`
+	Safe          bool     `json:"safe"`
 }
 
 // paragraph is fallback
@@ -160,8 +160,8 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 			}
 		}
 		computedLines[idx] = LinkedLine{
-			resultStrings: resultStrings,
-			safe:          safe,
+			ResultStrings: resultStrings,
+			Safe:          safe,
 		}
 	}
 
@@ -175,7 +175,7 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		// block
 		next := ""
 		if idx != len(computedLines)-1 {
-			nextResults := computedLines[idx+1].resultStrings
+			nextResults := computedLines[idx+1].ResultStrings
 			if len(nextResults) == 1 {
 				if nextResults[0] == "newline" {
 					next = nextResults[0]
@@ -184,8 +184,8 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 				if idx == 0 {
 					// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
 					// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
-					if !utils.ContainsAny(spankeys, line.resultStrings) &&
-						utils.ContainsAny(blockkeys, line.resultStrings) &&
+					if !utils.ContainsAny(spankeys, line.ResultStrings) &&
+						utils.ContainsAny(blockkeys, line.ResultStrings) &&
 						utils.ContainsAny(blockkeys, nextResults) &&
 						!utils.ContainsAny(spankeys, nextResults) {
 						// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
@@ -197,37 +197,37 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 			}
 		}
 
-		if (prev != "block" && prev != "newline") && computedLines[idx].safe {
+		if (prev != "block" && prev != "newline") && computedLines[idx].Safe {
 			// we're in a paragraph
 			copied := LinkedLine{
-				resultStrings: computedLines[idx].resultStrings,
-				safe:          computedLines[idx].safe,
-				lineType:      "paragraph_internal",
+				ResultStrings: computedLines[idx].ResultStrings,
+				Safe:          computedLines[idx].Safe,
+				LineType:      "paragraph_internal",
 			}
 			computedLines[idx] = copied
 		} else {
-			if prev == "newline" && computedLines[idx].safe {
+			if prev == "newline" && computedLines[idx].Safe {
 				// we're starting a paragraph
 				copied := LinkedLine{
-					resultStrings: computedLines[idx].resultStrings,
-					safe:          computedLines[idx].safe,
-					lineType:      "paragraph_start",
+					ResultStrings: computedLines[idx].ResultStrings,
+					Safe:          computedLines[idx].Safe,
+					LineType:      "paragraph_start",
 				}
 				computedLines[idx] = copied
 			} else {
 				// this is something else, no paragraph
 				if next == "newline" || next == "block" {
 					copied := LinkedLine{
-						resultStrings: computedLines[idx].resultStrings,
-						safe:          computedLines[idx].safe,
-						lineType:      "paragraph_end",
+						ResultStrings: computedLines[idx].ResultStrings,
+						Safe:          computedLines[idx].Safe,
+						LineType:      "paragraph_end",
 					}
 					computedLines[idx] = copied
 				} else {
 					copied := LinkedLine{
-						resultStrings: computedLines[idx].resultStrings,
-						safe:          computedLines[idx].safe,
-						lineType:      "block_start_end",
+						ResultStrings: computedLines[idx].ResultStrings,
+						Safe:          computedLines[idx].Safe,
+						LineType:      "block_start_end",
 					}
 					computedLines[idx] = copied
 				}
@@ -235,14 +235,14 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		}
 
 		// change prev
-		if len(line.resultStrings) == 1 {
-			if line.resultStrings[0] == "newline" {
-				prev = line.resultStrings[0]
+		if len(line.ResultStrings) == 1 {
+			if line.ResultStrings[0] == "newline" {
+				prev = line.ResultStrings[0]
 			}
 			// if the current line is not a span in any way, but is a block, then it is a block
 			// otherwise, it must be a span (?)
-		} else if !utils.ContainsAny(spankeys, line.resultStrings) &&
-			utils.ContainsAny(blockkeys, line.resultStrings) {
+		} else if !utils.ContainsAny(spankeys, line.ResultStrings) &&
+			utils.ContainsAny(blockkeys, line.ResultStrings) {
 			prev = "block"
 		} else {
 			prev = "span"

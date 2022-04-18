@@ -1,8 +1,8 @@
 package markdown
 
 import (
-	"encoding/json"
 	"fmt"
+	"obsidian-to-notion/utils"
 	"os"
 	"strconv"
 	"testing"
@@ -60,10 +60,5 @@ func TestPatterns(t *testing.T) {
 		lineIdx++
 	}
 	postprocessedlines := precompute(matchMap)
-	b, err := json.Marshal(postprocessedlines)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(b))
-	fmt.Println(postprocessedlines)
+	fmt.Println(utils.MapToJsonString(postprocessedlines))
 }
