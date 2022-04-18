@@ -1,5 +1,7 @@
 # Markdown To Notion
-Export markdown into Notion.
+Export markdown into JSON.
+
+Used to push markdown into Notion.
 
 ### Markdown
 
