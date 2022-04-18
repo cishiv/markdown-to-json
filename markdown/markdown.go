@@ -153,7 +153,8 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		safe := true
 		for _, m := range resultStrings {
 			// does the current thing contain a block pattern without a span pattern?
-			if !utils.Contains(spankeys, m) && utils.Contains(blockkeys, m) {
+			if !utils.Contains(spankeys, m) &&
+				utils.Contains(blockkeys, m) {
 				safe = !safe
 				break
 			}
@@ -183,7 +184,10 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 				if idx == 0 {
 					// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
 					// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
-					if !utils.ContainsAny(spankeys, line.resultStrings) && utils.ContainsAny(blockkeys, line.resultStrings) && utils.ContainsAny(blockkeys, nextResults) && !utils.ContainsAny(spankeys, nextResults) {
+					if !utils.ContainsAny(spankeys, line.resultStrings) &&
+						utils.ContainsAny(blockkeys, line.resultStrings) &&
+						utils.ContainsAny(blockkeys, nextResults) &&
+						!utils.ContainsAny(spankeys, nextResults) {
 						// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
 						next = "block"
 					} else {
@@ -237,7 +241,8 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 			}
 			// if the current line is not a span in any way, but is a block, then it is a block
 			// otherwise, it must be a span (?)
-		} else if !utils.ContainsAny(spankeys, line.resultStrings) && utils.ContainsAny(blockkeys, line.resultStrings) {
+		} else if !utils.ContainsAny(spankeys, line.resultStrings) &&
+			utils.ContainsAny(blockkeys, line.resultStrings) {
 			prev = "block"
 		} else {
 			prev = "span"
