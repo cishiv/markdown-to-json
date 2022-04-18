@@ -1,5 +1,9 @@
 package utils
 
+import (
+	"encoding/json"
+)
+
 /**
 Map: Define a generic map function that accepts a slice<T> and a function(T): V,
 that applies f(T):V to each element of slice<T> such that slice<T> is transformed to slice<V>
@@ -22,4 +26,32 @@ func Contains[T comparable](s []T, e T) bool {
 		}
 	}
 	return false
+}
+
+/**
+ContainsAny: Does set 2 contain any of the elements in set 1
+s1: Slice<T>
+s2: Slice<T>
+**/
+func ContainsAny[T comparable](s1 []T, s2 []T) bool {
+	doesContain := false
+	for _, e := range s2 {
+		// if Contains, flip the bit
+		doesContain = !Contains(s1, e)
+		if !doesContain {
+			break
+		}
+	}
+	return doesContain
+}
+
+/**
+MapToJsonString: Return a string representation of a <K,V> map
+**/
+func MapToJsonString[K comparable, V any](m map[K]V) string {
+	b, err := json.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
