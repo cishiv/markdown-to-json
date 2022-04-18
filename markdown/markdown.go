@@ -3,7 +3,7 @@ package markdown
 
 import (
 	"fmt"
-	"obsidian-to-notion/utils"
+	"markdown-to-notion/utils"
 	"regexp"
 	"strings"
 )
@@ -11,6 +11,11 @@ import (
 type Pair[T, U any] struct {
 	T any
 	U any
+}
+
+type Ocurrence struct {
+	FirstIdx  int `json:"firstIdx"`
+	SecondIdx int `json:"secondIdx"`
 }
 
 type Match struct {
@@ -29,9 +34,8 @@ type LinkedLine struct {
 }
 
 type Result struct {
-	Matcher    string `json:"matcher"`
-	IndexStart int    `json:"indexStart"`
-	IndexEnd   int    `json:"indexEnd"`
+	Matcher    string      `json:"matcher"`
+	Occurences []Ocurrence `json:"occurences"`
 }
 
 type Line struct {
@@ -290,4 +294,29 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 
 	}
 	return computedLines
+}
+
+func out(linkedLines map[int]LinkedLine) map[int]Line {
+	lines := make(map[int]Line)
+	for idx, v := range linkedLines {
+		results := utils.Map(v.unparsedResults, func(t Match) Result {
+			var occurences []Ocurrence
+			for _, val := range t.indices {
+				occurences = append(occurences, Ocurrence{
+					FirstIdx:  val[0],
+					SecondIdx: val[1],
+				})
+			}
+			return Result{
+				Matcher:    t.name,
+				Occurences: occurences,
+			}
+		})
+		lines[idx] = Line{
+			Content: v.content,
+			Results: results,
+			Type:    v.lineType,
+		}
+	}
+	return lines
 }
