@@ -29,7 +29,7 @@ func Contains[T comparable](s []T, e T) bool {
 }
 
 /**
-ContainsAny: Does set 2 contain any of the elements in set 1
+ContainsAny: Does slice 2 contain any of the elements in slice 1
 s1: Slice<T>
 s2: Slice<T>
 **/
