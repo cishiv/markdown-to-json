@@ -21,10 +21,23 @@ type Match struct {
 }
 
 type LinkedLine struct {
-	LineType      string   `json:"lineType"`
-	ResultStrings []string `json:"resultStrings"`
-	Safe          bool     `json:"safe"`
-	Content       string   `json:"content"`
+	lineType        string
+	unparsedResults []Match
+	resultStrings   []string
+	safe            bool
+	content         string
+}
+
+type Result struct {
+	Matcher    string `json:"matcher"`
+	IndexStart int    `json:"indexStart"`
+	IndexEnd   int    `json:"indexEnd"`
+}
+
+type Line struct {
+	Content string   `json:"content"`
+	Results []Result `json:"results"`
+	Type    string   `json:"type"`
 }
 
 // paragraph is fallback
@@ -176,10 +189,11 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		// it might be better to fix this by ensuring that we can encode the index in the key for matchMap
 		// a traditional 'map' may not work here
 		computedLines[index] = LinkedLine{
-			ResultStrings: resultStrings,
-			Safe:          safe,
+			resultStrings:   resultStrings,
+			unparsedResults: results,
+			safe:            safe,
 			// We can reliably do this for the moment
-			Content: results[0].line,
+			content: results[0].line,
 		}
 	}
 
@@ -193,7 +207,7 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		// block
 		next := ""
 		if idx != len(computedLines)-1 {
-			nextResults := computedLines[idx+1].ResultStrings
+			nextResults := computedLines[idx+1].resultStrings
 			if len(nextResults) == 1 {
 				if nextResults[0] == "newline" {
 					next = nextResults[0]
@@ -202,8 +216,8 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 				if idx == 0 {
 					// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
 					// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
-					if !utils.ContainsAny(spankeys, line.ResultStrings) &&
-						utils.ContainsAny(blockkeys, line.ResultStrings) &&
+					if !utils.ContainsAny(spankeys, line.resultStrings) &&
+						utils.ContainsAny(blockkeys, line.resultStrings) &&
 						utils.ContainsAny(blockkeys, nextResults) &&
 						!utils.ContainsAny(spankeys, nextResults) {
 						// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
@@ -215,41 +229,45 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 			}
 		}
 
-		if (prev != "block" && prev != "newline") && computedLines[idx].Safe {
+		if (prev != "block" && prev != "newline") && computedLines[idx].safe {
 			// we're in a paragraph
 			copied := LinkedLine{
-				ResultStrings: computedLines[idx].ResultStrings,
-				Safe:          computedLines[idx].Safe,
-				LineType:      "paragraph_internal",
-				Content:       computedLines[idx].Content,
+				resultStrings:   computedLines[idx].resultStrings,
+				unparsedResults: computedLines[idx].unparsedResults,
+				safe:            computedLines[idx].safe,
+				lineType:        "paragraph_internal",
+				content:         computedLines[idx].content,
 			}
 			computedLines[idx] = copied
 		} else {
-			if prev == "newline" && computedLines[idx].Safe {
+			if prev == "newline" && computedLines[idx].safe {
 				// we're starting a paragraph
 				copied := LinkedLine{
-					ResultStrings: computedLines[idx].ResultStrings,
-					Safe:          computedLines[idx].Safe,
-					LineType:      "paragraph_start",
-					Content:       computedLines[idx].Content,
+					resultStrings:   computedLines[idx].resultStrings,
+					unparsedResults: computedLines[idx].unparsedResults,
+					safe:            computedLines[idx].safe,
+					lineType:        "paragraph_start",
+					content:         computedLines[idx].content,
 				}
 				computedLines[idx] = copied
 			} else {
 				// this is something else, no paragraph
 				if next == "newline" || next == "block" {
 					copied := LinkedLine{
-						ResultStrings: computedLines[idx].ResultStrings,
-						Safe:          computedLines[idx].Safe,
-						LineType:      "paragraph_end",
-						Content:       computedLines[idx].Content,
+						resultStrings:   computedLines[idx].resultStrings,
+						unparsedResults: computedLines[idx].unparsedResults,
+						safe:            computedLines[idx].safe,
+						lineType:        "paragraph_end",
+						content:         computedLines[idx].content,
 					}
 					computedLines[idx] = copied
 				} else {
 					copied := LinkedLine{
-						ResultStrings: computedLines[idx].ResultStrings,
-						Safe:          computedLines[idx].Safe,
-						LineType:      "block_start_end",
-						Content:       computedLines[idx].Content,
+						resultStrings:   computedLines[idx].resultStrings,
+						unparsedResults: computedLines[idx].unparsedResults,
+						safe:            computedLines[idx].safe,
+						lineType:        "block_start_end",
+						content:         computedLines[idx].content,
 					}
 					computedLines[idx] = copied
 				}
@@ -257,14 +275,14 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		}
 
 		// change prev
-		if len(line.ResultStrings) == 1 {
-			if line.ResultStrings[0] == "newline" {
-				prev = line.ResultStrings[0]
+		if len(line.resultStrings) == 1 {
+			if line.resultStrings[0] == "newline" {
+				prev = line.resultStrings[0]
 			}
 			// if the current line is not a span in any way, but is a block, then it is a block
 			// otherwise, it must be a span (?)
-		} else if !utils.ContainsAny(spankeys, line.ResultStrings) &&
-			utils.ContainsAny(blockkeys, line.ResultStrings) {
+		} else if !utils.ContainsAny(spankeys, line.resultStrings) &&
+			utils.ContainsAny(blockkeys, line.resultStrings) {
 			prev = "block"
 		} else {
 			prev = "span"
