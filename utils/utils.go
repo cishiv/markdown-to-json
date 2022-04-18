@@ -46,6 +46,22 @@ func ContainsAny[T comparable](s1 []T, s2 []T) bool {
 }
 
 /**
+Difference: Compute the set difference between s1 & s2
+**/
+func Difference[T comparable](s1, s2 []T) (difference []T) {
+	unset := make(map[T]bool)
+	for _, item := range s2 {
+		unset[item] = true
+	}
+	for _, item := range s1 {
+		if _, q := unset[item]; !q {
+			difference = append(difference, item)
+		}
+	}
+	return difference
+}
+
+/**
 MapToJsonString: Return a string representation of a <K,V> map
 **/
 func MapToJsonString[K comparable, V any](m map[K]V) string {
