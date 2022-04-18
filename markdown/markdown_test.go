@@ -43,21 +43,20 @@ func TestPatterns(t *testing.T) {
 	patterns := compilePatterns()
 	// o(n^2) nice :)
 	matchMap := make(map[int][]Match)
-	lineIdx := 0
-	for _, line := range result {
+	for index, line := range result {
 		if line == "" {
 			// unique keys for newlines
 			var matches []Match
 			matches = append(matches, Match{
-				name: "newline",
-				line: line + "idx:" + strconv.Itoa(lineIdx),
+				name:      "newline",
+				line:      line + "idx:" + strconv.Itoa(index),
+				lineIndex: index,
 			})
-			matchMap[lineIdx] = matches
+			matchMap[index] = matches
 		} else {
-			matches := apply(patterns, line)
-			matchMap[lineIdx] = matches
+			matches := apply(patterns, line, index)
+			matchMap[index] = matches
 		}
-		lineIdx++
 	}
 	postprocessedlines := precompute(matchMap)
 	fmt.Println(utils.MapToJsonString(postprocessedlines))

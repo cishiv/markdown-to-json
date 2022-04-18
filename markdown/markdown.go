@@ -14,15 +14,17 @@ type Pair[T, U any] struct {
 }
 
 type Match struct {
-	name    string
-	line    string
-	indices [][]int
+	name      string
+	line      string
+	lineIndex int
+	indices   [][]int
 }
 
 type LinkedLine struct {
 	LineType      string   `json:"lineType"`
 	ResultStrings []string `json:"resultStrings"`
 	Safe          bool     `json:"safe"`
+	Content       string   `json:"content"`
 }
 
 // paragraph is fallback
@@ -85,7 +87,7 @@ func parse(fileSlice []string) string {
 	return ""
 }
 
-func apply(patterns map[string]regexp.Regexp, line string) []Match {
+func apply(patterns map[string]regexp.Regexp, line string, idx int) []Match {
 	// fmt.Println(line)
 	var matches []Match
 	for name, pattern := range patterns {
@@ -93,11 +95,21 @@ func apply(patterns map[string]regexp.Regexp, line string) []Match {
 		indices := pattern.FindAllIndex([]byte(line), -1)
 		if matched {
 			matches = append(matches, Match{
-				name:    name,
-				line:    line,
-				indices: indices,
+				name:      name,
+				line:      line,
+				indices:   indices,
+				lineIndex: idx,
 			})
 		}
+	}
+
+	// append a no-op paragraph match here
+	if len(matches) == 0 {
+		matches = append(matches, Match{
+			name:      "paragraph",
+			line:      line,
+			lineIndex: idx,
+		})
 	}
 	return matches
 }
@@ -144,9 +156,9 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 	}
 
 	// create computedLines map and preallocate memory for each line
-	computedLines := make(map[int]LinkedLine, len(matchMap))
+	computedLines := make(map[int]LinkedLine)
 	// precompute the things needed to determine hierarchies
-	for idx, results := range matchMap {
+	for index, results := range matchMap {
 		// fmt.Println(line, results)
 		resultStrings := utils.Map(results, func(t Match) string { return t.name })
 		// if the previous thing is not a newline and the current thing doesn't contain lone block patterns, this thing is likely in a paragraph
@@ -159,9 +171,15 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 				break
 			}
 		}
-		computedLines[idx] = LinkedLine{
+		// we have to ensure that the index used for the line is the one associated with the line
+		// and not the internal ordering of the Matches map
+		// it might be better to fix this by ensuring that we can encode the index in the key for matchMap
+		// a traditional 'map' may not work here
+		computedLines[index] = LinkedLine{
 			ResultStrings: resultStrings,
 			Safe:          safe,
+			// We can reliably do this for the moment
+			Content: results[0].line,
 		}
 	}
 
@@ -203,6 +221,7 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 				ResultStrings: computedLines[idx].ResultStrings,
 				Safe:          computedLines[idx].Safe,
 				LineType:      "paragraph_internal",
+				Content:       computedLines[idx].Content,
 			}
 			computedLines[idx] = copied
 		} else {
@@ -212,6 +231,7 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 					ResultStrings: computedLines[idx].ResultStrings,
 					Safe:          computedLines[idx].Safe,
 					LineType:      "paragraph_start",
+					Content:       computedLines[idx].Content,
 				}
 				computedLines[idx] = copied
 			} else {
@@ -221,6 +241,7 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 						ResultStrings: computedLines[idx].ResultStrings,
 						Safe:          computedLines[idx].Safe,
 						LineType:      "paragraph_end",
+						Content:       computedLines[idx].Content,
 					}
 					computedLines[idx] = copied
 				} else {
@@ -228,6 +249,7 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 						ResultStrings: computedLines[idx].ResultStrings,
 						Safe:          computedLines[idx].Safe,
 						LineType:      "block_start_end",
+						Content:       computedLines[idx].Content,
 					}
 					computedLines[idx] = copied
 				}
