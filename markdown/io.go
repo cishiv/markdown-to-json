@@ -46,3 +46,13 @@ func out(linkedLines map[int]LinkedLine) map[int]Line {
 	}
 	return lines
 }
+
+func copyAndAddLineTypeToLinkedLine(tar LinkedLine, lineType string) LinkedLine {
+	return LinkedLine{
+		resultStrings:   tar.resultStrings,
+		unparsedResults: tar.unparsedResults,
+		safe:            tar.safe,
+		lineType:        lineType,
+		content:         tar.content,
+	}
+}

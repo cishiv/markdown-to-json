@@ -32,12 +32,35 @@ type Result struct {
 	Occurences []Ocurrence `json:"occurences"`
 }
 
-func copyAndAddLineTypeToLinkedLine(tar LinkedLine, lineType string) LinkedLine {
-	return LinkedLine{
-		resultStrings:   tar.resultStrings,
-		unparsedResults: tar.unparsedResults,
-		safe:            tar.safe,
-		lineType:        lineType,
-		content:         tar.content,
-	}
+// From Markdown
+
+func FromMarkdownFileToJsonString(markdownFilePath string) string {
+	return ""
+}
+
+func FromMarkdownStringToJsonString(markdownString string) string {
+	return ""
+}
+
+func FromMarkdownFileToJsonFile(markdownFilePath string, jsonFilePath string) {
+}
+
+func FromMarkdownStringToJsonFile(markdownString string, jsonFilePath string) {
+
+}
+
+// To Markdown
+
+func ToMarkdownStringFromJsonString(jsonString string) string {
+	return ""
+}
+
+func ToMarkdownFileFromJsonString(jsonString string) string {
+	return ""
+}
+
+func ToMarkdownStringFromJsonFile(markdownFilePath string, jsonFilePath string) {
+}
+
+func ToMarkdownFileFromJsonFile(markdownFilePath string, jsonFilePath string) {
 }
