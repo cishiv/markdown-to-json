@@ -220,10 +220,7 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 				if idx == 0 {
 					// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
 					// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
-					if !utils.ContainsAny(spankeys, line.resultStrings) &&
-						utils.ContainsAny(blockkeys, line.resultStrings) &&
-						utils.ContainsAny(blockkeys, nextResults) &&
-						!utils.ContainsAny(spankeys, nextResults) {
+					if isNextLineBlock(spankeys, blockkeys, line.resultStrings, nextResults) {
 						// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
 						next = "block"
 					} else {
@@ -235,45 +232,17 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 
 		if (prev != "block" && prev != "newline") && computedLines[idx].safe {
 			// we're in a paragraph
-			copied := LinkedLine{
-				resultStrings:   computedLines[idx].resultStrings,
-				unparsedResults: computedLines[idx].unparsedResults,
-				safe:            computedLines[idx].safe,
-				lineType:        "paragraph_internal",
-				content:         computedLines[idx].content,
-			}
-			computedLines[idx] = copied
+			computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_internal")
 		} else {
 			if prev == "newline" && computedLines[idx].safe {
 				// we're starting a paragraph
-				copied := LinkedLine{
-					resultStrings:   computedLines[idx].resultStrings,
-					unparsedResults: computedLines[idx].unparsedResults,
-					safe:            computedLines[idx].safe,
-					lineType:        "paragraph_start",
-					content:         computedLines[idx].content,
-				}
-				computedLines[idx] = copied
+				computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_start")
 			} else {
 				// this is something else, no paragraph
 				if next == "newline" || next == "block" {
-					copied := LinkedLine{
-						resultStrings:   computedLines[idx].resultStrings,
-						unparsedResults: computedLines[idx].unparsedResults,
-						safe:            computedLines[idx].safe,
-						lineType:        "paragraph_end",
-						content:         computedLines[idx].content,
-					}
-					computedLines[idx] = copied
+					computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_end")
 				} else {
-					copied := LinkedLine{
-						resultStrings:   computedLines[idx].resultStrings,
-						unparsedResults: computedLines[idx].unparsedResults,
-						safe:            computedLines[idx].safe,
-						lineType:        "block_start_end",
-						content:         computedLines[idx].content,
-					}
-					computedLines[idx] = copied
+					computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "block_start_end")
 				}
 			}
 		}
@@ -319,4 +288,21 @@ func out(linkedLines map[int]LinkedLine) map[int]Line {
 		}
 	}
 	return lines
+}
+
+func copyAndAddLineTypeToLinkedLine(tar LinkedLine, lineType string) LinkedLine {
+	return LinkedLine{
+		resultStrings:   tar.resultStrings,
+		unparsedResults: tar.unparsedResults,
+		safe:            tar.safe,
+		lineType:        lineType,
+		content:         tar.content,
+	}
+}
+
+func isNextLineBlock(spankeys []string, blockkeys []string, resultStrings []string, nextResults []string) bool {
+	return !utils.ContainsAny(spankeys, resultStrings) &&
+		utils.ContainsAny(blockkeys, resultStrings) &&
+		utils.ContainsAny(blockkeys, nextResults) &&
+		!utils.ContainsAny(spankeys, nextResults)
 }
