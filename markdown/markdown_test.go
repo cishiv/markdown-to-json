@@ -2,9 +2,8 @@ package markdown
 
 import (
 	"fmt"
-	"obsidian-to-notion/utils"
+	"markdown-to-notion/utils"
 	"os"
-	"strconv"
 	"testing"
 )
 
@@ -35,29 +34,15 @@ _italics_
 // }
 
 func TestPatterns(t *testing.T) {
-	dat, err := os.ReadFile("./test.md")
+	dat, err := os.ReadFile("./examples/test.md")
 	if err != nil {
 		panic(err)
 	}
 	result := fileToSlice(string(dat))
 	patterns := compilePatterns()
 	// o(n^2) nice :)
-	matchMap := make(map[int][]Match)
-	for index, line := range result {
-		if line == "" {
-			// unique keys for newlines
-			var matches []Match
-			matches = append(matches, Match{
-				name:      "newline",
-				line:      line + "idx:" + strconv.Itoa(index),
-				lineIndex: index,
-			})
-			matchMap[index] = matches
-		} else {
-			matches := apply(patterns, line, index)
-			matchMap[index] = matches
-		}
-	}
+	matchMap := match(patterns, result)
 	postprocessedlines := precompute(matchMap)
-	fmt.Println(utils.MapToJsonString(postprocessedlines))
+	serializedLines := out(postprocessedlines)
+	fmt.Println(utils.MapToJsonString(serializedLines))
 }
