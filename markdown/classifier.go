@@ -119,6 +119,56 @@ func isNextLineBlock(spankeys []string, blockkeys []string, resultStrings []stri
 		!utils.ContainsAny(spankeys, nextResults)
 }
 
-func classifyLine() Classification {
-	return PARAGRAPH_START
+// next
+func classifyLine() (Classification, string) {
+	// This just needs to be rewritten to return a definitive classification and the "prev" value for this line
+	// if idx != len(computedLines)-1 {
+	// 	nextResults := computedLines[idx+1].resultStrings
+	// 	if len(nextResults) == 1 {
+	// 		if nextResults[0] == NEWLINE {
+	// 			next = nextResults[0]
+	// 		}
+	// 	} else {
+	// 		if idx == 0 {
+	// 			// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
+	// 			// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
+	// 			if isNextLineBlock(spankeys, blockkeys, line.resultStrings, nextResults) {
+	// 				// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
+	// 				next = BLOCK_PATTERN
+	// 			} else {
+	// 				next = SPAN_PATTERN
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// if (prev != SPAN_PATTERN && prev != NEWLINE) && computedLines[idx].safe {
+	// 	// we're in a paragraph
+	// 	computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_internal")
+	// } else {
+	// 	if prev == NEWLINE && computedLines[idx].safe {
+	// 		// we're starting a paragraph
+	// 		computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_start")
+	// 	} else {
+	// 		// this is something else, no paragraph
+	// 		if next == NEWLINE || next == BLOCK_PATTERN {
+	// 			computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_end")
+	// 		} else {
+	// 			computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "block_start_end")
+	// 		}
+	// 	}
+	// }
+	// change prev
+	// if len(line.resultStrings) == 1 {
+	// 	if line.resultStrings[0] == NEWLINE {
+	// 		prev = line.resultStrings[0]
+	// 	}
+	// 	// if the current line is not a span in any way, but is a block, then it is a block
+	// 	// otherwise, it must be a span (?)
+	// } else if !utils.ContainsAny(spankeys, line.resultStrings) &&
+	// 	utils.ContainsAny(blockkeys, line.resultStrings) {
+	// 	prev = BLOCK_PATTERN
+	// } else {
+	// 	prev = SPAN_PATTERN
+	// }
+	return PARAGRAPH_START, "start"
 }
