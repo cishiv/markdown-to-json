@@ -2,7 +2,7 @@ package markdown
 
 import (
 	"fmt"
-	"markdown-to-notion/utils"
+	"markdown-to-json/utils"
 	"os"
 	"testing"
 )

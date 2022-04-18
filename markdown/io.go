@@ -1,7 +1,7 @@
 package markdown
 
 import (
-	"markdown-to-notion/utils"
+	"markdown-to-json/utils"
 	"strings"
 )
 

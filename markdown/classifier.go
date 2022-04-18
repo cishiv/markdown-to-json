@@ -1,6 +1,6 @@
 package markdown
 
-import "markdown-to-notion/utils"
+import "markdown-to-json/utils"
 
 // TODO: Refactor once working
 func precompute(matchMap map[int][]Match) map[int]LinkedLine {
