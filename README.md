@@ -1,5 +1,5 @@
-# Obsidian To Notion
-Export notes from Obsidian into Notion.
+# Markdown To Notion
+Export markdown into Notion.
 
 ### Markdown
 
