@@ -3,6 +3,7 @@ package markdown
 
 import (
 	"fmt"
+	"obsidian-to-notion/utils"
 	"regexp"
 	"strings"
 )
@@ -12,19 +13,16 @@ type Pair[T, U any] struct {
 	U any
 }
 
-type Block struct {
-	content  string
-	name     string
-	children []Block
-	emphasis Pair[int, int]
-	strong   Pair[int, int]
-	url      string
-}
-
 type Match struct {
 	name    string
 	line    string
 	indices [][]int
+}
+
+type LinkedLine struct {
+	lineType      string
+	resultStrings []string
+	safe          bool
 }
 
 // paragraph is fallback
@@ -82,13 +80,13 @@ func parse(fileSlice []string) string {
 		if fileSlice[ptr] == "" {
 			continue
 		}
-		fmt.Println(fileSlice[ptr])
+		// fmt.Println(fileSlice[ptr])
 	}
 	return ""
 }
 
 func apply(patterns map[string]regexp.Regexp, line string) []Match {
-	fmt.Println(line)
+	// fmt.Println(line)
 	var matches []Match
 	for name, pattern := range patterns {
 		matched := pattern.MatchString(line)
@@ -126,4 +124,124 @@ func compilePatterns() map[string]regexp.Regexp {
 		fmt.Println("Compiled Name:", name, "=>", "Pattern:", pattern)
 	}
 	return patterns
+}
+
+func precompute(matchMap map[int][]Match) map[int]LinkedLine {
+	// TODO: Key arrays should be constant
+	spankeys := make([]string, len(spanpatterns))
+	i := 0
+	for k := range spanpatterns {
+		spankeys[i] = k
+		i++
+	}
+
+	blockkeys := make([]string, len(blockpatterns))
+	j := 0
+	for k := range blockpatterns {
+		blockkeys[j] = k
+		j++
+	}
+
+	// create computedLines map and preallocate memory for each line
+	computedLines := make(map[int]LinkedLine, len(matchMap))
+	// precompute the things needed to determine hierarchies
+	for idx, results := range matchMap {
+		// fmt.Println(line, results)
+		resultStrings := utils.Map(results, func(t Match) string { return t.name })
+		// if the previous thing is not a newline and the current thing doesn't contain lone block patterns, this thing is likely in a paragraph
+		safe := true
+		for _, m := range resultStrings {
+			// does the current thing contain a block pattern without a span pattern?
+			if !utils.Contains(spankeys, m) && utils.Contains(blockkeys, m) {
+				safe = !safe
+				break
+			}
+		}
+		computedLines[idx] = LinkedLine{
+			resultStrings: resultStrings,
+			safe:          safe,
+		}
+	}
+
+	// for the lines computed, we can look back and forth based on the indices
+	prev := "start"
+	for idx, line := range computedLines {
+		// we don't need to _store_ previous and next for a line, we only need it to determine if the line is
+		// paragrah_start
+		// paragraph_end
+		// paragraph_internal
+		// block
+		next := ""
+		if idx != len(computedLines)-1 {
+			nextResults := computedLines[idx+1].resultStrings
+			if len(nextResults) == 1 {
+				if nextResults[0] == "newline" {
+					next = nextResults[0]
+				}
+			} else {
+				if idx == 0 {
+					// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
+					// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
+					if !utils.ContainsAny(spankeys, line.resultStrings) && utils.ContainsAny(blockkeys, line.resultStrings) && utils.ContainsAny(blockkeys, nextResults) && !utils.ContainsAny(spankeys, nextResults) {
+						// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
+						next = "block"
+					} else {
+						next = "span"
+					}
+				}
+			}
+		}
+
+		if (prev != "block" && prev != "newline") && computedLines[idx].safe {
+			// we're in a paragraph
+			copied := LinkedLine{
+				resultStrings: computedLines[idx].resultStrings,
+				safe:          computedLines[idx].safe,
+				lineType:      "paragraph_internal",
+			}
+			computedLines[idx] = copied
+		} else {
+			if prev == "newline" && computedLines[idx].safe {
+				// we're starting a paragraph
+				copied := LinkedLine{
+					resultStrings: computedLines[idx].resultStrings,
+					safe:          computedLines[idx].safe,
+					lineType:      "paragraph_start",
+				}
+				computedLines[idx] = copied
+			} else {
+				// this is something else, no paragraph
+				if next == "newline" || next == "block" {
+					copied := LinkedLine{
+						resultStrings: computedLines[idx].resultStrings,
+						safe:          computedLines[idx].safe,
+						lineType:      "paragraph_end",
+					}
+					computedLines[idx] = copied
+				} else {
+					copied := LinkedLine{
+						resultStrings: computedLines[idx].resultStrings,
+						safe:          computedLines[idx].safe,
+						lineType:      "block_start_end",
+					}
+					computedLines[idx] = copied
+				}
+			}
+		}
+
+		// change prev
+		if len(line.resultStrings) == 1 {
+			if line.resultStrings[0] == "newline" {
+				prev = line.resultStrings[0]
+			}
+			// if the current line is not a span in any way, but is a block, then it is a block
+			// otherwise, it must be a span (?)
+		} else if !utils.ContainsAny(spankeys, line.resultStrings) && utils.ContainsAny(blockkeys, line.resultStrings) {
+			prev = "block"
+		} else {
+			prev = "span"
+		}
+
+	}
+	return computedLines
 }
