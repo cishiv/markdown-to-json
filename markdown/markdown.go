@@ -126,6 +126,7 @@ func compilePatterns() map[string]regexp.Regexp {
 	return patterns
 }
 
+// TODO: Refactor once working
 func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 	// TODO: Key arrays should be constant
 	spankeys := make([]string, len(spanpatterns))
