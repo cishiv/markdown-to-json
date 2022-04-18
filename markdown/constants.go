@@ -10,7 +10,7 @@ const NEWLINE = "newline"
 const PARAGRAPH = "paragraph"
 
 const BLOCK_PATTERN = "block"
-const SPAN_PATTERN = "block"
+const SPAN_PATTERN = "span"
 
 // paragraph is fallback
 var blockpatterns = map[string]string{
