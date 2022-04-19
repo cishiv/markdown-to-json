@@ -1,14 +1,12 @@
 package markdown
 
 import (
-	"fmt"
 	"markdown-to-json/utils"
 	"regexp"
 	"strconv"
 )
 
 func apply(patterns map[string]regexp.Regexp, line string, idx int) []Match {
-	// fmt.Println(line)
 	var matches []Match
 	for name, pattern := range patterns {
 		// trim leading and trailing space so we can match against indented lists, we maintain the space in the actual line "content" val
@@ -43,7 +41,6 @@ func apply(patterns map[string]regexp.Regexp, line string, idx int) []Match {
 }
 
 func compilePatterns() map[string]regexp.Regexp {
-	fmt.Println("compile block patterns")
 	patterns := make(map[string]regexp.Regexp)
 	for name, pattern := range blockpatterns {
 		compiled, err := regexp.Compile(pattern)
@@ -51,17 +48,14 @@ func compilePatterns() map[string]regexp.Regexp {
 			panic(err)
 		}
 		patterns[name] = *compiled.Copy()
-		fmt.Println("Complied Name:", name, "=>", "Pattern:", pattern)
 	}
 
-	fmt.Println("compile span patterns")
 	for name, pattern := range spanpatterns {
 		compiled, err := regexp.Compile(pattern)
 		if err != nil {
 			panic(err)
 		}
 		patterns[name] = *compiled.Copy()
-		fmt.Println("Compiled Name:", name, "=>", "Pattern:", pattern)
 	}
 	return patterns
 }

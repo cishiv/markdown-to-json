@@ -17,7 +17,6 @@ func parse(fileSlice []string) string {
 		if fileSlice[ptr] == "" {
 			continue
 		}
-		// fmt.Println(fileSlice[ptr])
 	}
 	return ""
 }

@@ -1,7 +1,6 @@
 package markdown
 
 import (
-	"fmt"
 	"markdown-to-json/utils"
 	"strings"
 )
@@ -79,7 +78,6 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 			foundResult := Match{}
 			lowest := int(^uint(0) >> 1)
 			for _, result := range line.unparsedResults {
-				fmt.Println(result.name)
 				if result.name == "heading3" || result.name == "heading2" || result.name == "heading1" {
 					if m[result.name] < lowest {
 						foundResult = result
