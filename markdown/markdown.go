@@ -1,6 +1,13 @@
 // Parse and convert a trivialised markdown spec to an opinionated JSON format
 package markdown
 
+import (
+	"io/ioutil"
+	"os"
+
+	"github.com/cishiv/markdown-to-json/v2/utils"
+)
+
 type Ocurrence struct {
 	FirstIdx  int `json:"firstIdx"`
 	SecondIdx int `json:"secondIdx"`
@@ -33,24 +40,29 @@ type Result struct {
 }
 
 // From Markdown
-
 func FromMarkdownFileToJsonString(markdownFilePath string) string {
-	return ""
+	dat, err := os.ReadFile(markdownFilePath)
+	if err != nil {
+		panic(err)
+	}
+	return FromMarkdownStringToJsonString(string(dat))
 }
 
 func FromMarkdownStringToJsonString(markdownString string) string {
-	return ""
+	return toMarkdown(markdownString)
 }
 
 func FromMarkdownFileToJsonFile(markdownFilePath string, jsonFilePath string) {
+	jsonString := FromMarkdownFileToJsonString(markdownFilePath)
+	_ = ioutil.WriteFile(jsonFilePath, []byte(jsonString), 0644)
 }
 
 func FromMarkdownStringToJsonFile(markdownString string, jsonFilePath string) {
-
+	jsonString := toMarkdown(markdownString)
+	_ = ioutil.WriteFile(jsonFilePath, []byte(jsonString), 0644)
 }
 
-// To Markdown
-
+// To Markdown -  TODO
 func ToMarkdownStringFromJsonString(jsonString string) string {
 	return ""
 }
@@ -63,4 +75,14 @@ func ToMarkdownStringFromJsonFile(markdownFilePath string, jsonFilePath string) 
 }
 
 func ToMarkdownFileFromJsonFile(markdownFilePath string, jsonFilePath string) {
+}
+
+func toMarkdown(markdownString string) string {
+	result := fileToSlice(markdownString)
+	patterns := compilePatterns()
+	matchMap := match(patterns, result)
+	postprocessedlines := precompute(matchMap)
+	serializedLines := out(postprocessedlines)
+	jsonString := utils.MapToJsonString(serializedLines)
+	return jsonString
 }
