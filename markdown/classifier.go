@@ -1,6 +1,9 @@
 package markdown
 
-import "markdown-to-json/utils"
+import (
+	"markdown-to-json/utils"
+	"strings"
+)
 
 // TODO: Refactor once working
 func precompute(matchMap map[int][]Match) map[int]LinkedLine {
@@ -23,7 +26,6 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 	computedLines := make(map[int]LinkedLine)
 	// precompute the things needed to determine hierarchies
 	for index, results := range matchMap {
-		// fmt.Println(line, results)
 		resultStrings := utils.Map(results, func(t Match) string { return t.name })
 		// if the previous thing is not a newline and the current thing doesn't contain lone block patterns, this thing is likely in a paragraph
 		safe := true
@@ -39,136 +41,77 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		// and not the internal ordering of the Matches map
 		// it might be better to fix this by ensuring that we can encode the index in the key for matchMap
 		// a traditional 'map' may not work here
-		computedLines[index] = LinkedLine{
+		linkedLine := LinkedLine{
 			resultStrings:   resultStrings,
 			unparsedResults: results,
 			safe:            safe,
 			// We can reliably do this for the moment
 			content: results[0].line,
 		}
+		lineType := isBlockOrNewline(linkedLine, blockkeys, spankeys)
+		copied := copyAndAddLineTypeToLinkedLine(linkedLine, string(lineType))
+		computedLines[index] = copied
 	}
 
-	// for the lines computed, we can look back and forth based on the indices
-	prev := "start"
 	for idx, line := range computedLines {
-		// we don't need to _store_ previous and next for a line, we only need it to determine if the line is
-		// paragrah_start
-		// paragraph_end
-		// paragraph_internal
-		// block
-		next := ""
-		if idx != len(computedLines)-1 {
-			nextResults := computedLines[idx+1].resultStrings
-			if len(nextResults) == 1 {
-				if nextResults[0] == NEWLINE {
-					next = nextResults[0]
-				}
+		if line.lineType == string(CONTEXTUAL_CLASSIFICATION) {
+			if idx == len(computedLines)-1 {
+				computedLines[idx] = copyAndAddLineTypeToLinkedLine(line, string(PARAGRAPH_END))
+			} else if idx == 0 {
+				computedLines[idx] = copyAndAddLineTypeToLinkedLine(line, string(PARAGRAPH_START))
 			} else {
-				if idx == 0 {
-					// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
-					// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
-					if isNextLineBlock(spankeys, blockkeys, line.resultStrings, nextResults) {
-						// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
-						next = BLOCK_PATTERN
-					} else {
-						next = SPAN_PATTERN
-					}
-				}
+				classification := classifyLine(line, blockkeys, spankeys, computedLines[idx-1].lineType, computedLines[idx+1].lineType)
+				computedLines[idx] = copyAndAddLineTypeToLinkedLine(line, string(classification))
 			}
 		}
-
-		if (prev != SPAN_PATTERN && prev != NEWLINE) && computedLines[idx].safe {
-			// we're in a paragraph
-			computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_internal")
-		} else {
-			if prev == NEWLINE && computedLines[idx].safe {
-				// we're starting a paragraph
-				computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_start")
-			} else {
-				// this is something else, no paragraph
-				if next == NEWLINE || next == BLOCK_PATTERN {
-					computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_end")
-				} else {
-					computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "block_start_end")
-				}
-			}
-		}
-
-		// change prev
-		if len(line.resultStrings) == 1 {
-			if line.resultStrings[0] == NEWLINE {
-				prev = line.resultStrings[0]
-			}
-			// if the current line is not a span in any way, but is a block, then it is a block
-			// otherwise, it must be a span (?)
-		} else if !utils.ContainsAny(spankeys, line.resultStrings) &&
-			utils.ContainsAny(blockkeys, line.resultStrings) {
-			prev = BLOCK_PATTERN
-		} else {
-			prev = SPAN_PATTERN
-		}
-
 	}
 	return computedLines
 }
 
-func isNextLineBlock(spankeys []string, blockkeys []string, resultStrings []string, nextResults []string) bool {
-	return !utils.ContainsAny(spankeys, resultStrings) &&
-		utils.ContainsAny(blockkeys, resultStrings) &&
-		utils.ContainsAny(blockkeys, nextResults) &&
-		!utils.ContainsAny(spankeys, nextResults)
+// context free classifications
+func isBlockOrNewline(line LinkedLine, blockkeys []string, spankeys []string) Classification {
+	// base case
+	// this might be breaking
+	if strings.Contains(line.content, "idx:") {
+		return NEWLINE
+	}
+	// block logic - needs a unit test
+	if utils.ContainsAny(blockkeys, line.resultStrings) && !utils.ContainsAny(spankeys, line.resultStrings) {
+		return BLOCK
+		// if we hit both, we need to check that the block occurs first
+	} else if utils.ContainsAny(blockkeys, line.resultStrings) && utils.ContainsAny(spankeys, line.resultStrings) {
+		globalLowest, globalBlock := int(^uint(0)>>1), false
+		for _, match := range line.unparsedResults {
+			// first check if the name of the pattern is a block
+			localLowest, block := int(^uint(0)>>1), utils.Contains(blockkeys, match.name)
+			// get the lowest found index in the indices of this matcher
+			for _, indexpair := range match.indices {
+				if indexpair[0] < localLowest {
+					localLowest = indexpair[0]
+				}
+			}
+			// bubble up the local maxima and whether it was for a block or not
+			if localLowest < globalLowest {
+				globalLowest, globalBlock = localLowest, block
+			}
+		}
+		if globalBlock {
+			return BLOCK
+		}
+	}
+	return CONTEXTUAL_CLASSIFICATION
 }
 
-// next
-func classifyLine() (Classification, string) {
-	// This just needs to be rewritten to return a definitive classification and the "prev" value for this line
-	// if idx != len(computedLines)-1 {
-	// 	nextResults := computedLines[idx+1].resultStrings
-	// 	if len(nextResults) == 1 {
-	// 		if nextResults[0] == NEWLINE {
-	// 			next = nextResults[0]
-	// 		}
-	// 	} else {
-	// 		if idx == 0 {
-	// 			// we might have spans IN blocks, just how we can have "block-esque" things in spans (this will likely require an index check)
-	// 			// if idx ALL spans > idx ALL blocks then BLOCK else SPAN
-	// 			if isNextLineBlock(spankeys, blockkeys, line.resultStrings, nextResults) {
-	// 				// this line is a block, it's likely the next line is going to be a paragraph_start if it not a new line or block, so check if its a block
-	// 				next = BLOCK_PATTERN
-	// 			} else {
-	// 				next = SPAN_PATTERN
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// if (prev != SPAN_PATTERN && prev != NEWLINE) && computedLines[idx].safe {
-	// 	// we're in a paragraph
-	// 	computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_internal")
-	// } else {
-	// 	if prev == NEWLINE && computedLines[idx].safe {
-	// 		// we're starting a paragraph
-	// 		computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_start")
-	// 	} else {
-	// 		// this is something else, no paragraph
-	// 		if next == NEWLINE || next == BLOCK_PATTERN {
-	// 			computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "paragraph_end")
-	// 		} else {
-	// 			computedLines[idx] = copyAndAddLineTypeToLinkedLine(computedLines[idx], "block_start_end")
-	// 		}
-	// 	}
-	// }
-	// change prev
-	// if len(line.resultStrings) == 1 {
-	// 	if line.resultStrings[0] == NEWLINE {
-	// 		prev = line.resultStrings[0]
-	// 	}
-	// 	// if the current line is not a span in any way, but is a block, then it is a block
-	// 	// otherwise, it must be a span (?)
-	// } else if !utils.ContainsAny(spankeys, line.resultStrings) &&
-	// 	utils.ContainsAny(blockkeys, line.resultStrings) {
-	// 	prev = BLOCK_PATTERN
-	// } else {
-	// 	prev = SPAN_PATTERN
-	// }
-	return PARAGRAPH_START, "start"
+// contextual classification
+func classifyLine(line LinkedLine, blockkeys []string, spankeys []string, previous string, next string) Classification {
+	if previous == string(BLOCK) || previous == string(NEWLINE) {
+		return PARAGRAPH_START
+	} else if (previous == string(PARAGRAPH_INTERNAL) || previous == string(PARAGRAPH_START)) &&
+		(next != string(BLOCK) && next != string(NEWLINE)) {
+		return PARAGRAPH_INTERNAL
+	} else if previous == string(CONTEXTUAL_CLASSIFICATION) || next == string(CONTEXTUAL_CLASSIFICATION) {
+		return PARAGRAPH_INTERNAL
+	} else {
+		return PARAGRAPH_END
+	}
 }

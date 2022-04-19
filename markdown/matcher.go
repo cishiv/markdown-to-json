@@ -2,6 +2,7 @@ package markdown
 
 import (
 	"fmt"
+	"markdown-to-json/utils"
 	"regexp"
 	"strconv"
 )
@@ -10,8 +11,16 @@ func apply(patterns map[string]regexp.Regexp, line string, idx int) []Match {
 	// fmt.Println(line)
 	var matches []Match
 	for name, pattern := range patterns {
-		matched := pattern.MatchString(line)
-		indices := pattern.FindAllIndex([]byte(line), -1)
+		// trim leading and trailing space so we can match against indented lists, we maintain the space in the actual line "content" val
+		trimmed, offset := utils.TrimAndCount(line)
+		matched := pattern.MatchString(trimmed)
+		paddedIndices := pattern.FindAllIndex([]byte(trimmed), -1)
+		// reapply the offset to each index pair
+		var indices = utils.Matrix2D[int](len(paddedIndices), 2)
+		for i, pair := range paddedIndices {
+			indices[i][0] = pair[0] + offset
+			indices[i][1] = pair[1] + offset
+		}
 		if matched {
 			matches = append(matches, Match{
 				name:      name,
@@ -64,7 +73,7 @@ func match(patterns map[string]regexp.Regexp, lines []string) map[int][]Match {
 			// unique keys for newlines
 			var matches []Match
 			matches = append(matches, Match{
-				name:      NEWLINE,
+				name:      string(NEWLINE),
 				line:      line + "idx:" + strconv.Itoa(index),
 				lineIndex: index,
 			})

@@ -3,14 +3,16 @@ package markdown
 type Classification string
 
 const (
-	PARAGRAPH_START Classification = "paragraph_start"
+	CONTEXTUAL_CLASSIFICATION Classification = "contextual_classification"
+	PARAGRAPH_START           Classification = "paragraph_start"
+	PARAGRAPH_INTERNAL        Classification = "paragraph_internal"
+	PARAGRAPH_END             Classification = "paragraph_end"
+	BLOCK                     Classification = "block"
+	NEWLINE                   Classification = "newline"
 )
 
-const NEWLINE = "newline"
+// Refers to a paragraph that did not hit any of the regex patterns.
 const PARAGRAPH = "paragraph"
-
-const BLOCK_PATTERN = "block"
-const SPAN_PATTERN = "span"
 
 // paragraph is fallback
 var blockpatterns = map[string]string{
