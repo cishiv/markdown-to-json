@@ -3,9 +3,10 @@ package markdown
 import (
 	"encoding/json"
 	"io/ioutil"
-	"markdown-to-json/utils"
 	"os"
 	"testing"
+
+	"github.com/cishiv/markdown-to-json/v2/utils"
 )
 
 func TestEndToEndParser(t *testing.T) {

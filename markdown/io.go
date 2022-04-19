@@ -1,8 +1,9 @@
 package markdown
 
 import (
-	"markdown-to-json/utils"
 	"strings"
+
+	"github.com/cishiv/markdown-to-json/v2/utils"
 )
 
 func fileToSlice(file string) []string {

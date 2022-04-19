@@ -1,9 +1,10 @@
 package markdown
 
 import (
-	"markdown-to-json/utils"
 	"regexp"
 	"strconv"
+
+	"github.com/cishiv/markdown-to-json/v2/utils"
 )
 
 func apply(patterns map[string]regexp.Regexp, line string, idx int) []Match {
