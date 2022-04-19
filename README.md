@@ -7,7 +7,8 @@ Used to push markdown into Notion.
 
 Each line can be categorized as follows:
 
-- lineType: Either `paragraph_start_` , `paragraph_internal`, `block_start_end`, `paragraph_end`, `newline` or `other`
+- lineType: Either `paragraph_start_`, `paragraph_internal`, `paragraph_end`, `block` or `newline`
+  - span types are included in the context of `paragraph_*`'s.
 - results: The matchers that correspond to particular markdown elements e.g. 
 ```
 {
