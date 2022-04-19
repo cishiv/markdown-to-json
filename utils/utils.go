@@ -2,12 +2,14 @@ package utils
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 /**
 Map: Define a generic map function that accepts a slice<T> and a function(T): V,
 that applies f(T):V to each element of slice<T> such that slice<T> is transformed to slice<V>
 **/
+
 func Map[T any, R any](operand []T, f func(T) R) []R {
 	result := make([]R, len(operand))
 	for i, r := range operand {
@@ -42,7 +44,7 @@ func ContainsAny[T comparable](s1 []T, s2 []T) bool {
 			break
 		}
 	}
-	return doesContain
+	return !doesContain
 }
 
 /**
@@ -70,4 +72,24 @@ func MapToJsonString[K comparable, V any](m map[K]V) string {
 		panic(err)
 	}
 	return string(b)
+}
+
+/**
+TrimAndCount: Trim the left most whitespaces in a string and return
+(trimmedString, spacesTrimmed)
+**/
+func TrimAndCount(s string) (string, int) {
+	spaces := len(s) - len(strings.TrimLeft(s, " "))
+	trimmed := strings.TrimLeft(s, " ")
+	return trimmed, spaces
+}
+
+func Matrix2D[T any](n, m int) [][]T {
+	matrix := make([][]T, n)
+	rows := make([]T, n*m)
+	for i, startRow := 0, 0; i < n; i, startRow = i+1, startRow+m {
+		endRow := startRow + m
+		matrix[i] = rows[startRow:endRow:endRow]
+	}
+	return matrix
 }

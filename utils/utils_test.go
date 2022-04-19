@@ -1,6 +1,8 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+)
 
 type Transformable struct {
 	first  string
@@ -10,6 +12,24 @@ type Transformable struct {
 type Result struct {
 	third  string
 	fourth string
+}
+
+var patterns = []string{"ul", "hr", "linebreak", "blockquote", "heading3", "codeblock", "ol", "heading1", "heading2"}
+
+func TestTrimAndCount(t *testing.T) {
+	toTrim := "   trim"
+	trimmed, count := TrimAndCount(toTrim)
+	if trimmed != "trim" && count != 3 {
+		t.Errorf("Incorrect trimming, expected %q spaces, got %q", 3, count)
+	}
+}
+func TestContainsAny(t *testing.T) {
+	shouldContain := []string{"heading3"}
+	got := ContainsAny(patterns, shouldContain)
+	if !got {
+		t.Errorf("a %q, did not contain %q", patterns, shouldContain)
+	}
+
 }
 
 func TestMap(t *testing.T) {
