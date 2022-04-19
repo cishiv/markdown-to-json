@@ -1,7 +1,7 @@
 package markdown
 
 import (
-	"fmt"
+	"io/ioutil"
 	"markdown-to-json/utils"
 	"os"
 	"testing"
@@ -44,5 +44,6 @@ func TestPatterns(t *testing.T) {
 	matchMap := match(patterns, result)
 	postprocessedlines := precompute(matchMap)
 	serializedLines := out(postprocessedlines)
-	fmt.Println(utils.MapToJsonString(serializedLines))
+	jsonString := utils.MapToJsonString(serializedLines)
+	_ = ioutil.WriteFile("examples/test-result.json", []byte(jsonString), 0644)
 }
