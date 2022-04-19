@@ -34,7 +34,7 @@ _italics_
 // }
 
 func TestPatterns(t *testing.T) {
-	dat, err := os.ReadFile("./examples/test.md")
+	dat, err := os.ReadFile("./examples/small-test.md")
 	if err != nil {
 		panic(err)
 	}
