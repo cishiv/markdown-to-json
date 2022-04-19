@@ -1,9 +1,9 @@
 # Markdown To Notion
 Export markdown into JSON.
 
-Used to push markdown into Notion.
+`go get github.com/cishiv/markdown-to-json/v2`
 
-Given a markdown file
+Given a markdown file:
 
 `/markdown/examples/small-test.md`
 ```
