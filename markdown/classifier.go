@@ -1,6 +1,7 @@
 package markdown
 
 import (
+	"fmt"
 	"markdown-to-json/utils"
 	"strings"
 )
@@ -62,6 +63,37 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 			} else {
 				classification := classifyLine(line, blockkeys, spankeys, computedLines[idx-1].lineType, computedLines[idx+1].lineType)
 				computedLines[idx] = copyAndAddLineTypeToLinkedLine(line, string(classification))
+			}
+		}
+	}
+
+	// cull extranous heading matches
+	m := map[string]int{
+		"heading3": 0,
+		"heading2": 1,
+		"heading1": 2,
+	}
+
+	for idx, line := range computedLines {
+		if line.lineType == string(BLOCK) {
+			foundResult := Match{}
+			lowest := int(^uint(0) >> 1)
+			for _, result := range line.unparsedResults {
+				fmt.Println(result.name)
+				if result.name == "heading3" || result.name == "heading2" || result.name == "heading1" {
+					if m[result.name] < lowest {
+						foundResult = result
+					}
+				}
+			}
+			var newResults []Match
+			newResults = append(newResults, foundResult)
+			computedLines[idx] = LinkedLine{
+				lineType:        line.lineType,
+				unparsedResults: newResults,
+				resultStrings:   line.resultStrings,
+				safe:            line.safe,
+				content:         line.content,
 			}
 		}
 	}
