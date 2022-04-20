@@ -78,21 +78,25 @@ func precompute(matchMap map[int][]Match) map[int]LinkedLine {
 		if line.lineType == string(BLOCK) {
 			foundResult := Match{}
 			lowest := int(^uint(0) >> 1)
+			heading := false
 			for _, result := range line.unparsedResults {
 				if result.name == "heading3" || result.name == "heading2" || result.name == "heading1" {
+					heading = true
 					if m[result.name] < lowest {
 						foundResult = result
 					}
 				}
 			}
 			var newResults []Match
-			newResults = append(newResults, foundResult)
-			computedLines[idx] = LinkedLine{
-				lineType:        line.lineType,
-				unparsedResults: newResults,
-				resultStrings:   line.resultStrings,
-				safe:            line.safe,
-				content:         line.content,
+			if heading {
+				newResults = append(newResults, foundResult)
+				computedLines[idx] = LinkedLine{
+					lineType:        line.lineType,
+					unparsedResults: newResults,
+					resultStrings:   line.resultStrings,
+					safe:            line.safe,
+					content:         line.content,
+				}
 			}
 		}
 	}
