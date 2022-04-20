@@ -39,6 +39,19 @@ type Result struct {
 	Occurences []Ocurrence `json:"occurences"`
 }
 
+func FromMarkdownFileToLineMap(markdownFilePath string) map[int]Line {
+	dat, err := os.ReadFile(markdownFilePath)
+	if err != nil {
+		panic(err)
+	}
+	result := fileToSlice(string(dat))
+	patterns := compilePatterns()
+	matchMap := match(patterns, result)
+	postprocessedlines := precompute(matchMap)
+	serializedLines := out(postprocessedlines)
+	return serializedLines
+}
+
 // From Markdown
 func FromMarkdownFileToJsonString(markdownFilePath string) string {
 	dat, err := os.ReadFile(markdownFilePath)
